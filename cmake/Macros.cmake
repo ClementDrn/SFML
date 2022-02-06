@@ -73,6 +73,17 @@ macro(sfml_add_library module)
     # enable C++17 support
     target_compile_features(${target} PUBLIC cxx_std_17)
 
+    # Add required flags for GCC if coverage reporting is enabled
+    if (SFML_ENABLE_COVERAGE AND SFML_COMPILER_GCC)
+        target_compile_options(${target} PUBLIC $<$<CONFIG:DEBUG>:-O0> $<$<CONFIG:DEBUG>:-g> $<$<CONFIG:DEBUG>:-fprofile-arcs> $<$<CONFIG:DEBUG>:-ftest-coverage>)
+
+        if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+            target_link_options(${target} PUBLIC $<$<CONFIG:DEBUG>:--coverage>)
+        else()
+            target_link_libraries(${target} PUBLIC $<$<CONFIG:DEBUG>:--coverage>)
+        endif()
+    endif()
+
     set_file_warnings(${THIS_SOURCES})
 
     # define the export symbol of the module

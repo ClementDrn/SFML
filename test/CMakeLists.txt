@@ -50,12 +50,52 @@ if(SFML_BUILD_NETWORK)
     target_link_libraries(test-sfml-network PRIVATE sfml-test-main)
 endif()
 
-# Automatically run the tests at the end of the build
-add_custom_target(runtests ALL
+# Add a target that just builds all tests without running them
+add_custom_target(tests
                   DEPENDS test-sfml-system test-sfml-window test-sfml-graphics test-sfml-network
+                  # TODO: Remove the following line once tests have been added for audio
+                  SFML::Audio
 )
 
-add_custom_command(TARGET runtests
-                   COMMENT "Run tests"
-                   POST_BUILD COMMAND "${CMAKE_CTEST_COMMAND}" --output-on-failure -C $<CONFIG>
-)
+# Automatically run the tests at the end of the build when building the default target
+add_custom_target(runtests ALL DEPENDS tests)
+
+if(SFML_COMPILER_MSVC)
+    # Try to find and use OpenCppCoverage for coverage reporting when building with MSVC
+    find_program(OpenCppCoverage_BINARY "OpenCppCoverage.exe")
+
+    if(OpenCppCoverage_BINARY)
+        execute_process(COMMAND "${OpenCppCoverage_BINARY}" --help ERROR_VARIABLE OpenCppCoverage_HELP_OUTPUT OUTPUT_QUIET)
+
+        if(OpenCppCoverage_HELP_OUTPUT MATCHES "OpenCppCoverage Version: ([.0-9]+)")
+            set(OpenCppCoverage_VERSION "${CMAKE_MATCH_1}")
+        endif()
+    endif()
+
+    include(FindPackageHandleStandardArgs)
+
+    find_package_handle_standard_args(OpenCppCoverage
+        REQUIRED_VARS OpenCppCoverage_BINARY
+        VERSION_VAR OpenCppCoverage_VERSION
+    )
+endif()
+
+if(OpenCppCoverage_FOUND)
+    # Use OpenCppCoverage
+    message(STATUS "Using OpenCppCoverage to generate coverage report")
+
+    string(REPLACE "/" "\\" COVERAGE_EXCLUDE "${CMAKE_CTEST_COMMAND}")
+    string(REPLACE "/" "\\" COVERAGE_SRC "${PROJECT_SOURCE_DIR}/src")
+    string(REPLACE "/" "\\" COVERAGE_INCLUDE "${PROJECT_SOURCE_DIR}/include")
+
+    add_custom_command(TARGET runtests
+                       COMMENT "Run tests"
+                       POST_BUILD COMMAND "${OpenCppCoverage_BINARY}" ARGS --export_type cobertura:"${CMAKE_BINARY_DIR}/coverage.out" --cover_children --excluded_modules "${COVERAGE_EXCLUDE}" --sources "${COVERAGE_SRC}" --sources "${COVERAGE_INCLUDE}" -- "${CMAKE_CTEST_COMMAND}" --output-on-failure -C $<CONFIG>
+    )
+else()
+    # Run tests without a coverage runner
+    add_custom_command(TARGET runtests
+                       COMMENT "Run tests"
+                       POST_BUILD COMMAND "${CMAKE_CTEST_COMMAND}" --output-on-failure -C $<CONFIG>
+    )
+endif()

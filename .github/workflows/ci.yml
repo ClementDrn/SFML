@@ -35,10 +35,15 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v2
 
-    - name: Install Linux Dependencies
+    - name: Install Linux Tools and Dependencies
       if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install libxrandr-dev libxcursor-dev libudev-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
+      run: sudo apt-get update && sudo apt-get install lcov libxrandr-dev libxcursor-dev libudev-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
 
+    - name: Install OpenCppCoverage and add to PATH
+      if: runner.os == 'Windows'
+      run: |
+        choco install OpenCppCoverage -y
+        echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
 
     - name: Install Android Components
       if: matrix.platform.name == 'Android'
@@ -48,7 +53,6 @@ jobs:
         wget -nv https://dl.google.com/android/repository/android-ndk-r18b-linux-x86_64.zip -P $GITHUB_WORKSPACE
         unzip -qq -d $GITHUB_WORKSPACE android-ndk-r18b-linux-x86_64.zip
 
-
     - name: Configure CMake
       shell: bash
       run: cmake -S $GITHUB_WORKSPACE -B $GITHUB_WORKSPACE/build -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DSFML_BUILD_EXAMPLES=TRUE -DCMAKE_VERBOSE_MAKEFILE=ON -DSFML_BUILD_TEST_SUITE=TRUE ${{matrix.platform.flags}} ${{matrix.config.flags}}
@@ -56,3 +60,29 @@ jobs:
     - name: Build
       shell: bash
       run: cmake --build $GITHUB_WORKSPACE/build --config Release --target install
+
+    - name: Generate OpenCppCoverage Coverage Report
+      if: matrix.platform.name == 'Windows VS2019' || matrix.platform.name == 'Windows VS2022'
+      shell: bash
+      run: cmake --build $GITHUB_WORKSPACE/build --config Debug --target runtests
+
+    - name: Generate lcov Coverage Report
+      if: matrix.platform.name == 'Linux GCC'
+      shell: bash
+      run: |
+        cmake -S $GITHUB_WORKSPACE -B $GITHUB_WORKSPACE/build -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DSFML_BUILD_TEST_SUITE=TRUE -DSFML_ENABLE_COVERAGE=TRUE ${{matrix.platform.flags}} ${{matrix.config.flags}}
+        cmake --build $GITHUB_WORKSPACE/build --target tests
+        lcov --base-directory $GITHUB_WORKSPACE --no-external --capture --directory $GITHUB_WORKSPACE/build --output-file $GITHUB_WORKSPACE/build/coverage-base.out --initial
+        cmake --build $GITHUB_WORKSPACE/build --target runtests
+        lcov --base-directory $GITHUB_WORKSPACE --no-external --capture --directory $GITHUB_WORKSPACE/build --output-file $GITHUB_WORKSPACE/build/coverage-test.out
+        lcov --base-directory $GITHUB_WORKSPACE --add-tracefile $GITHUB_WORKSPACE/build/coverage-base.out --add-tracefile $GITHUB_WORKSPACE/build/coverage-test.out --output-file $GITHUB_WORKSPACE/build/coverage.out
+        lcov --base-directory $GITHUB_WORKSPACE --remove $GITHUB_WORKSPACE/build/coverage.out '/usr/*' "${HOME}"'/.cache/*' '*/extlibs/*' '*/test/*' --output-file $GITHUB_WORKSPACE/build/coverage.out
+
+    - name: Upload Coverage Report to Codecov
+      if: matrix.platform.name == 'Windows VS2019' || matrix.platform.name == 'Windows VS2022' || matrix.platform.name == 'Linux GCC'
+      uses: codecov/codecov-action@v2
+      with:
+        directory: ./build
+        files: ./build/coverage.out
+        fail_ci_if_error: true
+        verbose: true
