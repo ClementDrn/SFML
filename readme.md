@@ -26,6 +26,10 @@ You can get the latest official release on [SFML's website](https://www.sfml-dev
 
 Follow the instructions of the [tutorials](https://www.sfml-dev.org/tutorials/), there is one for each platform/compiler that SFML supports.
 
+## Linking
+
+You need to define `SFML_STATIC` as a preprocesseor definition in the project you link SFML to.
+
 ## Learn
 
 There are several places to learn SFML:
