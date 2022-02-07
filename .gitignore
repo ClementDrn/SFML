@@ -38,3 +38,8 @@ build/
 .cache/
 .vscode/
 
+*.sln
+*.vcxproj*
+
+bin/
+bin-int/
