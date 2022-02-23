@@ -18,7 +18,7 @@ project "SFML"
 	staticruntime "on"
 
 	targetdir("bin/" .. outputdir .. "/%{prj.name}")
-	objdir("bin-int/" .. outputdir .. "/%{prj.name}")
+	objdir("obj/" .. outputdir .. "/%{prj.name}")
 	
 	includedirs {
 		"extlibs/headers/",
