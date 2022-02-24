@@ -1,5 +1,4 @@
-#include "Application.hpp"
-#include "PathfindingApplication.hpp"
+#include <SFML/Application/Application.hpp>
 
 
 namespace sf {
