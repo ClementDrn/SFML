@@ -34,12 +34,13 @@ project "SFML"
 		"include/**.hpp",
 		"src/**.hpp",
 		"src/**.cpp",
+		"include/**.h",
+		"src/**.h",
+		"src/**.c"
 	}
 
 	removefiles {
 		"src/SFML/Main/**",
-		"src/SFML/Window/NetBSD/**",
-		"src/SFML/Window/FreeBSD/**",
 	}
 
 	defines {
@@ -72,6 +73,9 @@ project "SFML"
 			"**/iOS/**",
 			"**/Unix/**",
 			"**/OSX/**",
+			"src/SFML/**/NetBSD/**",
+			"src/SFML/**/FreeBSD/**",
+			"src/SFML/**/OpenBSD/**"
 		}
 
 	-- Debug
