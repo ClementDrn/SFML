@@ -1,74 +1,94 @@
-#include "SystemUtil.hpp"
-
 #include <SFML/System/Angle.hpp>
 #include <SFML/System/String.hpp>
 #include <SFML/System/Time.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <SFML/System/Vector3.hpp>
 
-#include <cassert>
-#include <filesystem>
+#include <catch2/catch_approx.hpp>
+
+#include <SystemUtil.hpp>
 #include <fstream>
 #include <iomanip>
 #include <limits>
-#include <ostream>
-#include <sstream>
+
+#include <cassert>
+
 
 namespace sf
 {
-    std::ostream& operator <<(std::ostream& os, const sf::Angle& angle)
-    {
-        os << std::fixed << std::setprecision(std::numeric_limits<float>::max_digits10);
-        os << angle.asDegrees() << " deg";
-        return os;
-    }
-
-    std::ostream& operator <<(std::ostream& os, const sf::String& string)
-    {
-        os << string.toAnsiString();
-        return os;
-    }
-
-    std::ostream& operator <<(std::ostream& os, sf::Time time)
-    {
-        os << time.asMicroseconds() << "us";
-        return os;
-    }
+void setStreamPrecision(std::ostream& os, int maxDigits10)
+{
+    os << std::fixed << std::setprecision(maxDigits10);
 }
 
-namespace sf::Testing
+std::ostream& operator<<(std::ostream& os, const Angle& angle)
 {
-    static std::string getTemporaryFilePath()
-    {
-        static int counter = 0;
+    setStreamPrecision(os, std::numeric_limits<float>::max_digits10);
+    return os << angle.asDegrees() << " deg";
+}
 
-        std::ostringstream oss;
-        oss << "sfmltemp" << counter << ".tmp";
-        ++counter;
+std::ostream& operator<<(std::ostream& os, const String& string)
+{
+    return os << string.toAnsiString();
+}
 
-        std::filesystem::path result;
-        result /= std::filesystem::temp_directory_path();
-        result /= oss.str();
+std::ostream& operator<<(std::ostream& os, Time time)
+{
+    return os << time.asMicroseconds() << "us";
+}
 
-        return result.string();
-    }
+template <typename T>
+std::ostream& operator<<(std::ostream& os, Vector2<T> vector)
+{
+    setStreamPrecision(os, std::numeric_limits<T>::max_digits10);
+    return os << "(" << vector.x << ", " << vector.y << ")";
+}
 
-    TemporaryFile::TemporaryFile(const std::string& contents)
-        : m_path(getTemporaryFilePath())
-    {
-        std::ofstream ofs(m_path);
-        assert(ofs);
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Vector3<T>& vector)
+{
+    setStreamPrecision(os, std::numeric_limits<T>::max_digits10);
+    return os << "(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
+}
 
-        ofs << contents;
-        assert(ofs);
-    }
+template std::ostream& operator<<(std::ostream&, Vector2<int>);
+template std::ostream& operator<<(std::ostream&, Vector2<unsigned int>);
+template std::ostream& operator<<(std::ostream&, Vector2<float>);
 
-    TemporaryFile::~TemporaryFile()
-    {
-        [[maybe_unused]] const bool removed = std::filesystem::remove(m_path);
-        assert(removed);
-    }
+template std::ostream& operator<<(std::ostream&, const Vector3<int>&);
+template std::ostream& operator<<(std::ostream&, const Vector3<unsigned int>&);
+template std::ostream& operator<<(std::ostream&, const Vector3<float>&);
+} // namespace sf
 
-    const std::string& TemporaryFile::getPath() const
-    {
-        return m_path;
-    }
+bool operator==(const float& lhs, const Approx<float>& rhs)
+{
+    return lhs == Catch::Approx(rhs.value).margin(1e-5);
+}
+
+bool operator==(sf::Vector2f lhs, const Approx<sf::Vector2f>& rhs)
+{
+    return (lhs - rhs.value).length() == Approx(0.f);
+}
+
+bool operator==(const sf::Vector3f& lhs, const Approx<sf::Vector3f>& rhs)
+{
+    return (lhs - rhs.value).length() == Approx(0.f);
+}
+
+bool operator==(const sf::Angle& lhs, const Approx<sf::Angle>& rhs)
+{
+    return lhs.asRadians() == Approx(rhs.value.asRadians());
+}
+
+std::vector<std::byte> loadIntoMemory(const std::filesystem::path& path)
+{
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    assert(file);
+    const auto size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<std::byte>       buffer(static_cast<std::size_t>(size));
+    [[maybe_unused]] const auto& result = file.read(reinterpret_cast<char*>(buffer.data()),
+                                                    static_cast<std::streamsize>(size));
+    assert(result);
+    return buffer;
 }

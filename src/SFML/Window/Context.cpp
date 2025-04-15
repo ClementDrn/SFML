@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2022 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2025 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -27,52 +27,76 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/Context.hpp>
 #include <SFML/Window/GlContext.hpp>
+
 #include <SFML/System/Err.hpp>
+
 #include <ostream>
+#include <utility>
+
+#include <cassert>
 
 
 namespace
 {
-    // A nested named namespace is used here to allow unity builds of SFML.
-    namespace ContextImpl
-    {
-        // This per-thread variable holds the current context for each thread
-        thread_local sf::Context* currentContext(nullptr);
-    }
-}
+// A nested named namespace is used here to allow unity builds of SFML.
+namespace ContextImpl
+{
+// This per-thread variable holds the current context for each thread
+thread_local sf::Context* currentContext(nullptr);
+} // namespace ContextImpl
+} // namespace
 
 namespace sf
 {
 ////////////////////////////////////////////////////////////
-Context::Context()
-: m_context(priv::GlContext::create())
+Context::Context() : m_context(priv::GlContext::create())
 {
     if (!setActive(true))
-    {
         err() << "Failed to set context as active during construction" << std::endl;
-    }
 }
 
 
 ////////////////////////////////////////////////////////////
 Context::~Context()
 {
-    if (!setActive(false))
-    {
+    if (m_context && !setActive(false))
         err() << "Failed to set context as inactive during destruction" << std::endl;
-    }
+}
+
+
+////////////////////////////////////////////////////////////
+Context::Context(Context&& context) noexcept : m_context(std::move(context.m_context))
+{
+    if (&context == ContextImpl::currentContext)
+        ContextImpl::currentContext = this;
+}
+
+
+////////////////////////////////////////////////////////////
+Context& Context::operator=(Context&& context) noexcept
+{
+    if (this == &context)
+        return *this;
+
+    m_context = std::move(context.m_context);
+    if (&context == ContextImpl::currentContext)
+        ContextImpl::currentContext = this;
+
+    return *this;
 }
 
 
 ////////////////////////////////////////////////////////////
 bool Context::setActive(bool active)
 {
-    bool result = m_context->setActive(active);
+    if (!m_context->setActive(active))
+        return false;
 
-    if (result)
-        ContextImpl::currentContext = (active ? this : nullptr);
-
-    return result;
+    if (active)
+        ContextImpl::currentContext = this;
+    else if (this == ContextImpl::currentContext)
+        ContextImpl::currentContext = nullptr;
+    return true;
 }
 
 
@@ -91,20 +115,20 @@ const Context* Context::getActiveContext()
     // We have to check that the last activated sf::Context is still active (a RenderTarget activation may have deactivated it)
     if (currentContext && currentContext->m_context.get() == priv::GlContext::getActiveContext())
         return currentContext;
-    else
-        return nullptr;
+
+    return nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////
-Uint64 Context::getActiveContextId()
+std::uint64_t Context::getActiveContextId()
 {
     return priv::GlContext::getActiveContextId();
 }
 
 
 ////////////////////////////////////////////////////////////
-bool Context::isExtensionAvailable(const char* name)
+bool Context::isExtensionAvailable(std::string_view name)
 {
     return priv::GlContext::isExtensionAvailable(name);
 }
@@ -113,18 +137,16 @@ bool Context::isExtensionAvailable(const char* name)
 ////////////////////////////////////////////////////////////
 GlFunctionPointer Context::getFunction(const char* name)
 {
+    assert(name && "Context::getFunction Name must not be null");
     return priv::GlContext::getFunction(name);
 }
 
 
 ////////////////////////////////////////////////////////////
-Context::Context(const ContextSettings& settings, unsigned int width, unsigned int height)
-: m_context(priv::GlContext::create(settings, width, height))
+Context::Context(const ContextSettings& settings, Vector2u size) : m_context(priv::GlContext::create(settings, size))
 {
     if (!setActive(true))
-    {
         err() << "Failed to set context as active during construction" << std::endl;
-    }
 }
 
 } // namespace sf

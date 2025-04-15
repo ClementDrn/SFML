@@ -1,65 +1,66 @@
 // Header for SFML unit tests.
 //
 // For a new system module test case, include this header.
-// This ensures that string conversions are visible and can be used by doctest for debug output.
+// This ensures that string conversions are visible and can be used by Catch2 for debug output.
 
-#ifndef SFML_TESTUTILITIES_SYSTEM_HPP
-#define SFML_TESTUTILITIES_SYSTEM_HPP
+#pragma once
 
-#include <SFML/System/Vector2.hpp>
-#include <SFML/System/Vector3.hpp>
+#include <filesystem>
+#include <iosfwd>
+#include <vector>
 
-#include <ostream>
-#include <sstream>
-#include <string>
+#include <cstddef>
 
-// String conversions for doctest framework
+// String conversions for Catch2
 namespace sf
 {
-    class Angle;
-    class String;
-    class Time;
+class Angle;
+class String;
+class Time;
 
-    std::ostream& operator <<(std::ostream& os, const sf::Angle& angle);
-    std::ostream& operator <<(std::ostream& os, const sf::String& string);
-    std::ostream& operator <<(std::ostream& os, sf::Time time);
+template <typename>
+class Vector2;
 
-    template <typename T>
-    std::ostream& operator <<(std::ostream& os, const sf::Vector2<T>& vector)
-    {
-        os << "(" << vector.x << ", " << vector.y << ")";
-        return os;
-    }
+template <typename>
+class Vector3;
 
-    template <typename T>
-    std::ostream& operator <<(std::ostream& os, const sf::Vector3<T>& vector)
-    {
-        os << "(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
-        return os;
-    }
-}
+void setStreamPrecision(std::ostream& os, int maxDigits10);
 
-namespace sf::Testing
+std::ostream& operator<<(std::ostream& os, const Angle& angle);
+std::ostream& operator<<(std::ostream& os, const String& string);
+std::ostream& operator<<(std::ostream& os, Time time);
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, Vector2<T> vector);
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Vector3<T>& vector);
+} // namespace sf
+
+////////////////////////////////////////////////////////////
+/// Class template for creating custom approximate comparisons.
+/// To register a new type, simply implement a custom operator==
+/// overload for that type.
+////////////////////////////////////////////////////////////
+template <typename T>
+struct Approx
 {
-    class TemporaryFile
+    explicit Approx(const T& t) : value(t)
     {
-    private:
-        std::string m_path;
+    }
 
-    public:
-        // Create a temporary file with a randomly generated path, containing 'contents'.
-        TemporaryFile(const std::string& contents);
+    const T& value;
+};
 
-        // Close and delete the generated file.
-        ~TemporaryFile();
+bool operator==(const float& lhs, const Approx<float>& rhs);
+bool operator==(sf::Vector2<float> lhs, const Approx<sf::Vector2<float>>& rhs);
+bool operator==(const sf::Vector3<float>& lhs, const Approx<sf::Vector3<float>>& rhs);
+bool operator==(const sf::Angle& lhs, const Approx<sf::Angle>& rhs);
 
-        // Prevent copies.
-        TemporaryFile(const TemporaryFile&) = delete;
-        TemporaryFile& operator=(const TemporaryFile&) = delete;
-
-        // Return the randomly generated path.
-        const std::string& getPath() const;
-    };
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Approx<T>& approx)
+{
+    return os << approx.value;
 }
 
-#endif // SFML_TESTUTILITIES_SYSTEM_HPP
+[[nodiscard]] std::vector<std::byte> loadIntoMemory(const std::filesystem::path& path);

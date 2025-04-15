@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2022 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2025 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -22,22 +22,15 @@
 //
 ////////////////////////////////////////////////////////////
 
-#ifndef SFML_CONFIG_HPP
-#define SFML_CONFIG_HPP
+#pragma once
 
 
 ////////////////////////////////////////////////////////////
-// Headers
+// SFML version
 ////////////////////////////////////////////////////////////
-#include <cstdint>
-
-
-////////////////////////////////////////////////////////////
-// Define the SFML version
-////////////////////////////////////////////////////////////
-#define SFML_VERSION_MAJOR 3
-#define SFML_VERSION_MINOR 0
-#define SFML_VERSION_PATCH 0
+#define SFML_VERSION_MAJOR      3
+#define SFML_VERSION_MINOR      1
+#define SFML_VERSION_PATCH      0
 #define SFML_VERSION_IS_RELEASE false
 
 
@@ -47,143 +40,125 @@
 ////////////////////////////////////////////////////////////
 #if defined(_WIN32)
 
-    // Windows
-    #define SFML_SYSTEM_WINDOWS
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
+// Windows
+#define SFML_SYSTEM_WINDOWS
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #elif defined(__APPLE__) && defined(__MACH__)
 
-    // Apple platform, see which one it is
-    #include "TargetConditionals.h"
+// Apple platform, see which one it is
+#include "TargetConditionals.h"
 
-    #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 
-        // iOS
-        #define SFML_SYSTEM_IOS
+// iOS
+#define SFML_SYSTEM_IOS
 
-    #elif TARGET_OS_MAC
+#elif TARGET_OS_MAC
 
-        // MacOS
-        #define SFML_SYSTEM_MACOS
+// macOS
+#define SFML_SYSTEM_MACOS
 
-    #else
+#else
 
-        // Unsupported Apple system
-        #error This Apple operating system is not supported by SFML library
+// Unsupported Apple system
+#error This Apple operating system is not supported by SFML library
 
-    #endif
+#endif
 
 #elif defined(__unix__)
 
-    // UNIX system, see which one it is
-    #if defined(__ANDROID__)
+// UNIX system, see which one it is
+#if defined(__ANDROID__)
 
-        // Android
-        #define SFML_SYSTEM_ANDROID
+// Android
+#define SFML_SYSTEM_ANDROID
 
-    #elif defined(__linux__)
+#elif defined(__linux__)
 
-         // Linux
-        #define SFML_SYSTEM_LINUX
+// Linux
+#define SFML_SYSTEM_LINUX
 
-    #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 
-        // FreeBSD
-        #define SFML_SYSTEM_FREEBSD
+// FreeBSD
+#define SFML_SYSTEM_FREEBSD
 
-    #elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__)
 
-        // OpenBSD
-        #define SFML_SYSTEM_OPENBSD
+// OpenBSD
+#define SFML_SYSTEM_OPENBSD
 
-    #elif defined(__NetBSD__)
+#elif defined(__NetBSD__)
 
-        // NetBSD
-        #define SFML_SYSTEM_NETBSD
-
-    #else
-
-        // Unsupported UNIX system
-        #error This UNIX operating system is not supported by SFML library
-
-    #endif
+// NetBSD
+#define SFML_SYSTEM_NETBSD
 
 #else
 
-    // Unsupported system
-    #error This operating system is not supported by SFML library
+// Unsupported UNIX system
+#error This UNIX operating system is not supported by SFML library
+
+#endif
+
+#else
+
+// Unsupported system
+#error This operating system is not supported by SFML library
 
 #endif
 
 
 ////////////////////////////////////////////////////////////
-// Define a portable debug macro
+// Ensure minimum C++ language standard version is met
+////////////////////////////////////////////////////////////
+#if (defined(_MSVC_LANG) && _MSVC_LANG < 201703L) || (!defined(_MSVC_LANG) && __cplusplus < 201703L)
+#error "Enable C++17 or newer for your compiler (e.g. -std=c++17 for GCC/Clang or /std:c++17 for MSVC)"
+#endif
+
+
+////////////////////////////////////////////////////////////
+// Portable debug macro
 ////////////////////////////////////////////////////////////
 #if !defined(NDEBUG)
 
-    #define SFML_DEBUG
+#define SFML_DEBUG
 
 #endif
 
 
 ////////////////////////////////////////////////////////////
-// Define helpers to create portable import / export macros for each module
+// Helpers to create portable import / export macros for each module
 ////////////////////////////////////////////////////////////
 #if !defined(SFML_STATIC)
 
-    #if defined(SFML_SYSTEM_WINDOWS)
+#if defined(SFML_SYSTEM_WINDOWS)
 
-        // Windows compilers need specific (and different) keywords for export and import
-        #define SFML_API_EXPORT __declspec(dllexport)
-        #define SFML_API_IMPORT __declspec(dllimport)
+// Windows compilers need specific (and different) keywords for export and import
+#define SFML_API_EXPORT __declspec(dllexport)
+#define SFML_API_IMPORT __declspec(dllimport)
 
-        // For Visual C++ compilers, we also need to turn off this annoying C4251 warning
-        #ifdef _MSC_VER
+// For Visual C++ compilers, we also need to turn off this annoying C4251 & C4275 warning
+#ifdef _MSC_VER
 
-            #pragma warning(disable: 4251)
-
-        #endif
-
-    #else // Linux, FreeBSD, Mac OS X
-
-        #define SFML_API_EXPORT __attribute__ ((__visibility__ ("default")))
-        #define SFML_API_IMPORT __attribute__ ((__visibility__ ("default")))
-
-    #endif
-
-#else
-
-    // Static build doesn't need import/export macros
-    #define SFML_API_EXPORT
-    #define SFML_API_IMPORT
+#pragma warning(disable : 4251) // Using standard library types in our own exported types is okay
+#pragma warning(disable : 4275) // Exporting types derived from the standard library is okay
 
 #endif
 
+#else // Linux, FreeBSD, macOS
 
-////////////////////////////////////////////////////////////
-// Define portable fixed-size types
-////////////////////////////////////////////////////////////
-namespace sf
-{
-    // 8 bits integer types
-    using Int8 = std::int8_t;
-    using Uint8 = std::uint8_t;
+#define SFML_API_EXPORT __attribute__((__visibility__("default")))
+#define SFML_API_IMPORT __attribute__((__visibility__("default")))
 
-    // 16 bits integer types
-    using Int16 = std::int16_t;
-    using Uint16 = std::uint16_t;
+#endif
 
-    // 32 bits integer types
-    using Int32 = std::int32_t;
-    using Uint32 = std::uint32_t;
+#else
 
-    // 64 bits integer types
-    using Int64 = std::int64_t;
-    using Uint64 = std::uint64_t;
+// Static build doesn't need import/export macros
+#define SFML_API_EXPORT
+#define SFML_API_IMPORT
 
-} // namespace sf
-
-
-#endif // SFML_CONFIG_HPP
+#endif

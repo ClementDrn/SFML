@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2022 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2025 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -22,20 +22,27 @@
 //
 ////////////////////////////////////////////////////////////
 
-#ifndef SFML_WGLCONTEXT_HPP
-#define SFML_WGLCONTEXT_HPP
+#pragma once
 
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
+#include <SFML/Window/Context.hpp>
 #include <SFML/Window/GlContext.hpp>
+
+#include <SFML/System/Vector2.hpp>
+
 #include <glad/wgl.h>
 
 
 namespace sf
 {
+struct ContextSettings;
+
 namespace priv
 {
+class WindowImpl;
+
 ////////////////////////////////////////////////////////////
 /// \brief Windows (WGL) implementation of OpenGL contexts
 ///
@@ -43,7 +50,6 @@ namespace priv
 class WglContext : public GlContext
 {
 public:
-
     ////////////////////////////////////////////////////////////
     /// \brief Create a new default context
     ///
@@ -68,11 +74,10 @@ public:
     ///
     /// \param shared   Context to share the new one with
     /// \param settings Creation parameters
-    /// \param width    Back buffer width, in pixels
-    /// \param height   Back buffer height, in pixels
+    /// \param size     Back buffer width and height, in pixels
     ///
     ////////////////////////////////////////////////////////////
-    WglContext(WglContext* shared, const ContextSettings& settings, unsigned int width, unsigned int height);
+    WglContext(WglContext* shared, const ContextSettings& settings, Vector2u size);
 
     ////////////////////////////////////////////////////////////
     /// \brief Destructor
@@ -85,7 +90,7 @@ public:
     ///
     /// \param name Name of the function to get the address of
     ///
-    /// \return Address of the OpenGL function, 0 on failure
+    /// \return Address of the OpenGL function, `nullptr` on failure
     ///
     ////////////////////////////////////////////////////////////
     static GlFunctionPointer getFunction(const char* name);
@@ -95,7 +100,7 @@ public:
     ///
     /// \param current Whether to make the context current or no longer current
     ///
-    /// \return True on success, false if any error happened
+    /// \return `true` on success, `false` if any error happened
     ///
     ////////////////////////////////////////////////////////////
     bool makeCurrent(bool current) override;
@@ -114,7 +119,7 @@ public:
     /// This can avoid some visual artifacts, and limit the framerate
     /// to a good value (but not constant across different computers).
     ///
-    /// \param enabled: True to enable v-sync, false to deactivate
+    /// \param enabled: `true` to enable v-sync, `false` to deactivate
     ///
     ////////////////////////////////////////////////////////////
     void setVerticalSyncEnabled(bool enabled) override;
@@ -130,10 +135,12 @@ public:
     /// \return The best pixel format
     ///
     ////////////////////////////////////////////////////////////
-    static int selectBestPixelFormat(HDC deviceContext, unsigned int bitsPerPixel, const ContextSettings& settings, bool pbuffer = false);
+    static int selectBestPixelFormat(HDC                    deviceContext,
+                                     unsigned int           bitsPerPixel,
+                                     const ContextSettings& settings,
+                                     bool                   pbuffer = false);
 
 private:
-
     ////////////////////////////////////////////////////////////
     /// \brief Set the pixel format of the device context
     ///
@@ -152,12 +159,11 @@ private:
     /// \brief Create the context's drawing surface
     ///
     /// \param shared       Shared context (can be a null pointer)
-    /// \param width        Back buffer width, in pixels
-    /// \param height       Back buffer height, in pixels
+    /// \param size         Back buffer width and height, in pixels
     /// \param bitsPerPixel Pixel depth, in bits per pixel
     ///
     ////////////////////////////////////////////////////////////
-    void createSurface(WglContext* shared, unsigned int width, unsigned int height, unsigned int bitsPerPixel);
+    void createSurface(WglContext* shared, Vector2u size, unsigned int bitsPerPixel);
 
     ////////////////////////////////////////////////////////////
     /// \brief Create the context's drawing surface from an existing window
@@ -179,15 +185,13 @@ private:
     ////////////////////////////////////////////////////////////
     // Member data
     ////////////////////////////////////////////////////////////
-    HWND        m_window;        //!< Window to which the context is attached
-    HPBUFFERARB m_pbuffer;       //!< Handle to a pbuffer if one was created
-    HDC         m_deviceContext; //!< Device context associated to the context
-    HGLRC       m_context;       //!< OpenGL context
-    bool        m_ownsWindow;    //!< Do we own the target window?
+    HWND        m_window{};        //!< Window to which the context is attached
+    HPBUFFERARB m_pbuffer{};       //!< Handle to a pbuffer if one was created
+    HDC         m_deviceContext{}; //!< Device context associated to the context
+    HGLRC       m_context{};       //!< OpenGL context
+    bool        m_ownsWindow{};    //!< Do we own the target window?
+    bool        m_isGeneric{};     //!< Is this context provided by the generic GDI implementation?
 };
 
 } // namespace priv
-
 } // namespace sf
-
-#endif // SFML_WGLCONTEXT_HPP

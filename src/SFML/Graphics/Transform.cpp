@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2022 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2025 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -26,7 +26,9 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Graphics/Transform.hpp>
+
 #include <SFML/System/Angle.hpp>
+
 #include <cmath>
 
 
@@ -35,28 +37,32 @@ namespace sf
 ////////////////////////////////////////////////////////////
 Transform& Transform::rotate(Angle angle)
 {
-    float rad = angle.asRadians();
-    float cos = std::cos(rad);
-    float sin = std::sin(rad);
+    const float rad = angle.asRadians();
+    const float cos = std::cos(rad);
+    const float sin = std::sin(rad);
 
-    Transform rotation(cos, -sin, 0,
-                       sin,  cos, 0,
-                       0,    0,   1);
+    // clang-format off
+    const Transform rotation(cos, -sin, 0,
+                             sin,  cos, 0,
+                             0,    0,   1);
+    // clang-format on
 
     return combine(rotation);
 }
 
 
 ////////////////////////////////////////////////////////////
-Transform& Transform::rotate(Angle angle, const Vector2f& center)
+Transform& Transform::rotate(Angle angle, Vector2f center)
 {
-    float rad = angle.asRadians();
-    float cos = std::cos(rad);
-    float sin = std::sin(rad);
+    const float rad = angle.asRadians();
+    const float cos = std::cos(rad);
+    const float sin = std::sin(rad);
 
-    Transform rotation(cos, -sin, center.x * (1 - cos) + center.y * sin,
-                       sin,  cos, center.y * (1 - cos) - center.x * sin,
-                       0,    0,   1);
+    // clang-format off
+    const Transform rotation(cos, -sin, center.x * (1 - cos) + center.y * sin,
+                             sin,  cos, center.y * (1 - cos) - center.x * sin,
+                             0,    0,   1);
+    // clang-format on
 
     return combine(rotation);
 }

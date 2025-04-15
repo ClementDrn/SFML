@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2022 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2025 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -22,27 +22,22 @@
 //
 ////////////////////////////////////////////////////////////
 
-#ifndef SFML_UTF_HPP
-#define SFML_UTF_HPP
+#pragma once
 
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/Config.hpp>
-#include <iterator>
+
+#include <array>
 #include <locale>
-#include <string>
+
+#include <cstdint>
 #include <cstdlib>
 
 
 namespace sf
 {
-namespace priv
-{
-    template<class InputIt, class OutputIt>
-    OutputIt copy(InputIt first, InputIt last, OutputIt d_first);
-}
-
 template <unsigned int N>
 class Utf;
 
@@ -54,7 +49,6 @@ template <>
 class Utf<8>
 {
 public:
-
     ////////////////////////////////////////////////////////////
     /// \brief Decode a single UTF-8 character
     ///
@@ -70,7 +64,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In>
-    static In decode(In begin, In end, Uint32& output, Uint32 replacement = 0);
+    static In decode(In begin, In end, char32_t& output, char32_t replacement = 0);
 
     ////////////////////////////////////////////////////////////
     /// \brief Encode a single UTF-8 character
@@ -86,7 +80,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename Out>
-    static Out encode(Uint32 input, Out output, Uint8 replacement = 0);
+    static Out encode(char32_t input, Out output, std::uint8_t replacement = 0);
 
     ////////////////////////////////////////////////////////////
     /// \brief Advance to the next UTF-8 character
@@ -123,7 +117,7 @@ public:
     /// \brief Convert an ANSI characters range to UTF-8
     ///
     /// The current global locale will be used by default, unless you
-    /// pass a custom one in the \a locale parameter.
+    /// pass a custom one in the `locale` parameter.
     ///
     /// \param begin  Iterator pointing to the beginning of the input sequence
     /// \param end    Iterator pointing to the end of the input sequence
@@ -134,7 +128,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In, typename Out>
-    static Out fromAnsi(In begin, In end, Out output, const std::locale& locale = std::locale());
+    static Out fromAnsi(In begin, In end, Out output, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert a wide characters range to UTF-8
@@ -166,7 +160,7 @@ public:
     /// \brief Convert an UTF-8 characters range to ANSI characters
     ///
     /// The current global locale will be used by default, unless you
-    /// pass a custom one in the \a locale parameter.
+    /// pass a custom one in the `locale` parameter.
     ///
     /// \param begin       Iterator pointing to the beginning of the input sequence
     /// \param end         Iterator pointing to the end of the input sequence
@@ -178,7 +172,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In, typename Out>
-    static Out toAnsi(In begin, In end, Out output, char replacement = 0, const std::locale& locale = std::locale());
+    static Out toAnsi(In begin, In end, Out output, char replacement = 0, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert an UTF-8 characters range to wide characters
@@ -213,7 +207,7 @@ public:
     ///
     /// This functions does nothing more than a direct copy;
     /// it is defined only to provide the same interface as other
-    /// specializations of the sf::Utf<> template, and allow
+    /// specializations of the `sf::Utf<>` template, and allow
     /// generic code to be written on top of it.
     ///
     /// \param begin  Iterator pointing to the beginning of the input sequence
@@ -261,7 +255,6 @@ template <>
 class Utf<16>
 {
 public:
-
     ////////////////////////////////////////////////////////////
     /// \brief Decode a single UTF-16 character
     ///
@@ -277,7 +270,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In>
-    static In decode(In begin, In end, Uint32& output, Uint32 replacement = 0);
+    static In decode(In begin, In end, char32_t& output, char32_t replacement = 0);
 
     ////////////////////////////////////////////////////////////
     /// \brief Encode a single UTF-16 character
@@ -293,7 +286,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename Out>
-    static Out encode(Uint32 input, Out output, Uint16 replacement = 0);
+    static Out encode(char32_t input, Out output, char16_t replacement = 0);
 
     ////////////////////////////////////////////////////////////
     /// \brief Advance to the next UTF-16 character
@@ -330,7 +323,7 @@ public:
     /// \brief Convert an ANSI characters range to UTF-16
     ///
     /// The current global locale will be used by default, unless you
-    /// pass a custom one in the \a locale parameter.
+    /// pass a custom one in the `locale` parameter.
     ///
     /// \param begin  Iterator pointing to the beginning of the input sequence
     /// \param end    Iterator pointing to the end of the input sequence
@@ -341,7 +334,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In, typename Out>
-    static Out fromAnsi(In begin, In end, Out output, const std::locale& locale = std::locale());
+    static Out fromAnsi(In begin, In end, Out output, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert a wide characters range to UTF-16
@@ -373,7 +366,7 @@ public:
     /// \brief Convert an UTF-16 characters range to ANSI characters
     ///
     /// The current global locale will be used by default, unless you
-    /// pass a custom one in the \a locale parameter.
+    /// pass a custom one in the `locale` parameter.
     ///
     /// \param begin       Iterator pointing to the beginning of the input sequence
     /// \param end         Iterator pointing to the end of the input sequence
@@ -385,7 +378,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In, typename Out>
-    static Out toAnsi(In begin, In end, Out output, char replacement = 0, const std::locale& locale = std::locale());
+    static Out toAnsi(In begin, In end, Out output, char replacement = 0, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert an UTF-16 characters range to wide characters
@@ -433,7 +426,7 @@ public:
     ///
     /// This functions does nothing more than a direct copy;
     /// it is defined only to provide the same interface as other
-    /// specializations of the sf::Utf<> template, and allow
+    /// specializations of the `sf::Utf<>` template, and allow
     /// generic code to be written on top of it.
     ///
     /// \param begin  Iterator pointing to the beginning of the input sequence
@@ -468,7 +461,6 @@ template <>
 class Utf<32>
 {
 public:
-
     ////////////////////////////////////////////////////////////
     /// \brief Decode a single UTF-32 character
     ///
@@ -485,7 +477,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In>
-    static In decode(In begin, In end, Uint32& output, Uint32 replacement = 0);
+    static In decode(In begin, In end, char32_t& output, char32_t replacement = 0);
 
     ////////////////////////////////////////////////////////////
     /// \brief Encode a single UTF-32 character
@@ -502,7 +494,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename Out>
-    static Out encode(Uint32 input, Out output, Uint32 replacement = 0);
+    static Out encode(char32_t input, Out output, char32_t replacement = 0);
 
     ////////////////////////////////////////////////////////////
     /// \brief Advance to the next UTF-32 character
@@ -538,7 +530,7 @@ public:
     /// \brief Convert an ANSI characters range to UTF-32
     ///
     /// The current global locale will be used by default, unless you
-    /// pass a custom one in the \a locale parameter.
+    /// pass a custom one in the `locale` parameter.
     ///
     /// \param begin  Iterator pointing to the beginning of the input sequence
     /// \param end    Iterator pointing to the end of the input sequence
@@ -549,7 +541,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In, typename Out>
-    static Out fromAnsi(In begin, In end, Out output, const std::locale& locale = std::locale());
+    static Out fromAnsi(In begin, In end, Out output, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert a wide characters range to UTF-32
@@ -581,7 +573,7 @@ public:
     /// \brief Convert an UTF-32 characters range to ANSI characters
     ///
     /// The current global locale will be used by default, unless you
-    /// pass a custom one in the \a locale parameter.
+    /// pass a custom one in the `locale` parameter.
     ///
     /// \param begin       Iterator pointing to the beginning of the input sequence
     /// \param end         Iterator pointing to the end of the input sequence
@@ -593,7 +585,7 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In, typename Out>
-    static Out toAnsi(In begin, In end, Out output, char replacement = 0, const std::locale& locale = std::locale());
+    static Out toAnsi(In begin, In end, Out output, char replacement = 0, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Convert an UTF-32 characters range to wide characters
@@ -654,7 +646,7 @@ public:
     ///
     /// This functions does nothing more than a direct copy;
     /// it is defined only to provide the same interface as other
-    /// specializations of the sf::Utf<> template, and allow
+    /// specializations of the `sf::Utf<>` template, and allow
     /// generic code to be written on top of it.
     ///
     /// \param begin  Iterator pointing to the beginning of the input sequence
@@ -671,7 +663,7 @@ public:
     /// \brief Decode a single ANSI character to UTF-32
     ///
     /// This function does not exist in other specializations
-    /// of sf::Utf<>, it is defined for convenience (it is used by
+    /// of `sf::Utf<>`, it is defined for convenience (it is used by
     /// several other conversion functions).
     ///
     /// \param input  Input ANSI character
@@ -681,13 +673,13 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In>
-    static Uint32 decodeAnsi(In input, const std::locale& locale = std::locale());
+    static char32_t decodeAnsi(In input, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Decode a single wide character to UTF-32
     ///
     /// This function does not exist in other specializations
-    /// of sf::Utf<>, it is defined for convenience (it is used by
+    /// of `sf::Utf<>`, it is defined for convenience (it is used by
     /// several other conversion functions).
     ///
     /// \param input Input wide character
@@ -696,13 +688,13 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename In>
-    static Uint32 decodeWide(In input);
+    static char32_t decodeWide(In input);
 
     ////////////////////////////////////////////////////////////
     /// \brief Encode a single UTF-32 character to ANSI
     ///
     /// This function does not exist in other specializations
-    /// of sf::Utf<>, it is defined for convenience (it is used by
+    /// of `sf::Utf<>`, it is defined for convenience (it is used by
     /// several other conversion functions).
     ///
     /// \param codepoint   Iterator pointing to the beginning of the input sequence
@@ -714,13 +706,13 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename Out>
-    static Out encodeAnsi(Uint32 codepoint, Out output, char replacement = 0, const std::locale& locale = std::locale());
+    static Out encodeAnsi(char32_t codepoint, Out output, char replacement = 0, const std::locale& locale = {});
 
     ////////////////////////////////////////////////////////////
     /// \brief Encode a single UTF-32 character to wide
     ///
     /// This function does not exist in other specializations
-    /// of sf::Utf<>, it is defined for convenience (it is used by
+    /// of `sf::Utf<>`, it is defined for convenience (it is used by
     /// several other conversion functions).
     ///
     /// \param codepoint   Iterator pointing to the beginning of the input sequence
@@ -731,20 +723,17 @@ public:
     ///
     ////////////////////////////////////////////////////////////
     template <typename Out>
-    static Out encodeWide(Uint32 codepoint, Out output, wchar_t replacement = 0);
+    static Out encodeWide(char32_t codepoint, Out output, wchar_t replacement = 0);
 };
 
-#include <SFML/System/Utf.inl>
-
 // Make type aliases to get rid of the template syntax
-using Utf8 = Utf<8>;
+using Utf8  = Utf<8>;
 using Utf16 = Utf<16>;
 using Utf32 = Utf<32>;
 
 } // namespace sf
 
-
-#endif // SFML_UTF_HPP
+#include <SFML/System/Utf.inl>
 
 
 ////////////////////////////////////////////////////////////
@@ -753,17 +742,17 @@ using Utf32 = Utf<32>;
 ///
 /// Utility class providing generic functions for UTF conversions.
 ///
-/// sf::Utf is a low-level, generic interface for counting, iterating,
+/// `sf::Utf` is a low-level, generic interface for counting, iterating,
 /// encoding and decoding Unicode characters and strings. It is able
 /// to handle ANSI, wide, latin-1, UTF-8, UTF-16 and UTF-32 encodings.
 ///
-/// sf::Utf<X> functions are all static, these classes are not meant to
+/// `sf::Utf<X>` functions are all static, these classes are not meant to
 /// be instantiated. All the functions are template, so that you
 /// can use any character / string type for a given encoding.
 ///
 /// It has 3 specializations:
-/// \li sf::Utf<8> (with sf::Utf8 type alias)
-/// \li sf::Utf<16> (with sf::Utf16 type alias)
-/// \li sf::Utf<32> (with sf::Utf32 type alias)
+/// \li `sf::Utf<8>` (with `sf::Utf8` type alias)
+/// \li `sf::Utf<16>` (with `sf::Utf16` type alias)
+/// \li `sf::Utf<32>` (with `sf::Utf32` type alias)
 ///
 ////////////////////////////////////////////////////////////
