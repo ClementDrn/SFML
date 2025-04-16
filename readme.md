@@ -100,3 +100,15 @@ In short, SFML is free for any use (commercial or personal, proprietary or open-
 -   [_libflac_](https://gitlab.xiph.org/xiph/flac) is under the [BSD license](https://gitlab.xiph.org/xiph/flac/-/blob/master/COPYING.Xiph)
 -   [_minimp3_](https://github.com/lieff/minimp3) is under the [CC0 license](https://github.com/lieff/minimp3/blob/master/LICENSE)
 -   [_miniaudio_](https://github.com/mackron/miniaudio) is [public domain or under the MIT No Attribution license](https://github.com/mackron/miniaudio/blob/master/LICENSE)
+
+
+## Side notes for Linux 
+
+You want to install g++ and g++-multilib. Careful, they meust be of the same version. 
+```sh
+sudo apt-get install gcc-multilib g++-multilib
+```
+
+```sh
+sudo apt-get install libfreetype-dev
+```

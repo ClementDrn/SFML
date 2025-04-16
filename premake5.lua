@@ -24,7 +24,6 @@ project "SFML"
 		"extlibs/headers/",
 		"extlibs/headers/glad/include",
 		"extlibs/headers/vulkan/",
-		"extlibs/headers/freetype2/",
 		"extlibs/headers/stb_image/",
 		"include/",
 		"src/"
@@ -67,15 +66,46 @@ project "SFML"
 	-- Windows
 	filter "system:windows"
 		systemversion "latest"
-
 		removefiles { 
 			"**/Android/**",
 			"**/iOS/**",
 			"**/Unix/**",
-			"**/OSX/**",
+			"**/macOS/**",
 			"src/SFML/**/NetBSD/**",
 			"src/SFML/**/FreeBSD/**",
 			"src/SFML/**/OpenBSD/**"
+		}
+
+	-- Linux
+	filter "system:linux"
+		systemversion "latest"
+		removefiles { 
+			"**/Android/**",
+			"**/iOS/**",
+			"**/Win32/**",
+			"**/macOS/**",
+			"src/SFML/Window/DRM/**",
+			"src/SFML/**/NetBSD/**",
+			"src/SFML/**/FreeBSD/**",
+			"src/SFML/**/OpenBSD/**"
+		}
+		includedirs {
+			"/usr/include/freetype2/"
+		}
+		links {
+			"GL",
+			"freetype",
+			"X11",
+			"Xrandr",
+			"Xi",
+			"Xcursor",
+			"udev"
+		}
+
+	-- Linux GMake
+	filter {"system:linux", "action:gmake2"}
+		buildoptions {
+			"-Wall"
 		}
 
 	-- Debug

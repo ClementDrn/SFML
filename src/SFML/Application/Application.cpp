@@ -3,10 +3,12 @@
 
 namespace sf {
 
+    const Application::Properties Application::Properties::DEFAULT;
+
     Application::Application(const std::string& title, const Properties& props)
         : m_clearColor(props.clearColor)
     {
-        m_window = new RenderWindow(VideoMode(props.winWidth, props.winHeight), title, props.style);
+        m_window = new RenderWindow(VideoMode({ props.winWidth, props.winHeight }), title, props.style);
     }
 
     Application::~Application()
@@ -14,12 +16,9 @@ namespace sf {
         delete m_window;
     }
 
-
-
     void Application::run()
     {
         // Variables
-        Event e;
         Time lastFrameTime;
         Time now;
 
@@ -27,8 +26,8 @@ namespace sf {
         while (m_window->isOpen())
         {
             // Events
-            while (m_window->pollEvent(e))
-                onEvent(e);
+            while (const std::optional event = m_window->pollEvent())
+                onEvent(event);
 
             // Update
             now = microseconds(std::chrono::duration_cast<std::chrono::microseconds>(
